@@ -19,7 +19,7 @@ package com.intel.analytics.bigdl.nn
 import com.intel.analytics.bigdl.nn.abstractnn.{AbstractModule, Activity, DataFormat, TensorModule}
 import com.intel.analytics.bigdl.tensor.Tensor
 import com.intel.analytics.bigdl.tensor.TensorNumericMath.TensorNumeric
-import com.intel.analytics.bigdl.utils.Engine
+import com.intel.analytics.bigdl.utils.{Engine, T, Table}
 import com.intel.analytics.bigdl.utils.serializer._
 import com.intel.analytics.bigdl.utils.serializer.converters.DataConverter
 import com.intel.analytics.bigdl.serialization.Bigdl.{AttrValue, BigDLModule}
@@ -64,7 +64,7 @@ import scala.reflect.runtime.universe
 
 class SpatialMaxPoolingWithIndices[T: ClassTag](
   val kW: Int, val kH: Int, val dW: Int, val dH: Int, val padW: Int = 0, val padH: Int = 0,
-  val format: DataFormat = DataFormat.NCHW)(implicit ev: TensorNumeric[T]) extends TensorModule[T] {
+  val format: DataFormat = DataFormat.NCHW)(implicit ev: TensorNumeric[T]) extends AbstractModule[Tensor[T], Table, T] {
 
   var ceilMode = false
   val indices = Tensor[T]()
@@ -91,7 +91,7 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
     this
   }
 
-  override def updateOutput(input: Tensor[T]): Tensor[T] = {
+  override def updateOutput(input: Tensor[T]): Table = {
     require(input.dim() == 3 || input.dim() == 4,
       "SpatialMaxPooling: " + ErrorInfo.constrainInputAs3DOrBatch)
 
@@ -100,6 +100,7 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
     val nInputPlane = input.size(dimc)
     val inputHeight = input.size(dimh)
     val inputWidth = input.size(dimw)
+    val out = Tensor[T]()
 
     val sizes =
       if (padW == -1 && padH == -1) {
@@ -130,38 +131,38 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
     if (input.dim() == 3) {
       format match {
         case DataFormat.NCHW =>
-          output.resize(Array(nInputPlane, oHeight, oWidth))
+          out.resize(Array(nInputPlane, oHeight, oWidth))
           /* indices will contain the locations for each output point */
           indices.resize(Array(nInputPlane, oHeight, oWidth))
           if (classTag[T] == classTag[Double]) {
             NNPrimitive.maxPoolingForwardDouble(
               input.asInstanceOf[Tensor[Double]],
-              output.asInstanceOf[Tensor[Double]],
+              out.asInstanceOf[Tensor[Double]],
               indices.asInstanceOf[Tensor[Double]],
               oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop)
           } else if (classTag[T] == classTag[Float]) {
             NNPrimitive.maxPoolingForwardFloat(
               input.asInstanceOf[Tensor[Float]],
-              output.asInstanceOf[Tensor[Float]],
+              out.asInstanceOf[Tensor[Float]],
               indices.asInstanceOf[Tensor[Float]],
               oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop)
           } else {
             throw new IllegalArgumentException
           }
         case DataFormat.NHWC =>
-          output.resize(Array(oHeight, oWidth, nInputPlane))
+          out.resize(Array(oHeight, oWidth, nInputPlane))
           /* indices will contain the locations for each output point */
           indices.resize(Array(oHeight, oWidth, nInputPlane))
           if (classTag[T] == classTag[Double]) {
             NNPrimitive.maxPoolingForwardDoubleNHWC(
               input.asInstanceOf[Tensor[Double]],
-              output.asInstanceOf[Tensor[Double]],
+              out.asInstanceOf[Tensor[Double]],
               indices.asInstanceOf[Tensor[Double]],
               oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop)
           } else if (classTag[T] == classTag[Float]) {
             NNPrimitive.maxPoolingForwardFloatNHWC(
               input.asInstanceOf[Tensor[Float]],
-              output.asInstanceOf[Tensor[Float]],
+              out.asInstanceOf[Tensor[Float]],
               indices.asInstanceOf[Tensor[Float]],
               oWidth, oHeight, kW, kH, dW, dH, padLeft, padTop)
           } else {
@@ -172,13 +173,13 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
       val nbatch = input.size(1)
       format match {
         case DataFormat.NCHW =>
-          output.resize(Array(nbatch, nInputPlane, oHeight, oWidth))
+          out.resize(Array(nbatch, nInputPlane, oHeight, oWidth))
           indices.resize(Array(nbatch, nInputPlane, oHeight, oWidth))
           if (classTag[T] == classTag[Double]) {
             Engine.model.invokeAndWait(
               (1 to nbatch).map(i => () => {
                 val curInput = input(i)
-                val curOutput = output(i)
+                val curOutput = out(i)
                 val curIndices = indices(i)
                 NNPrimitive.maxPoolingForwardDouble(
                   curInput.asInstanceOf[Tensor[Double]],
@@ -193,7 +194,7 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
             Engine.model.invokeAndWait(
               (1 to nbatch).map(i => () => {
                 val curInput = input(i)
-                val curOutput = output(i)
+                val curOutput = out(i)
                 val curIndices = indices(i)
                 NNPrimitive.maxPoolingForwardFloat(
                   curInput.asInstanceOf[Tensor[Float]],
@@ -208,13 +209,13 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
             throw new IllegalArgumentException
           }
         case DataFormat.NHWC =>
-          output.resize(Array(nbatch, oHeight, oWidth, nInputPlane))
+          out.resize(Array(nbatch, oHeight, oWidth, nInputPlane))
           indices.resize(Array(nbatch, oHeight, oWidth, nInputPlane))
           if (classTag[T] == classTag[Double]) {
             Engine.model.invokeAndWait(
               (1 to nbatch).map(i => () => {
                 val curInput = input(i)
-                val curOutput = output(i)
+                val curOutput = out(i)
                 val curIndices = indices(i)
                 NNPrimitive.maxPoolingForwardDoubleNHWC(
                   curInput.asInstanceOf[Tensor[Double]],
@@ -229,7 +230,7 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
             Engine.model.invokeAndWait(
               (1 to nbatch).map(i => () => {
                 val curInput = input(i)
-                val curOutput = output(i)
+                val curOutput = out(i)
                 val curIndices = indices(i)
                 NNPrimitive.maxPoolingForwardFloatNHWC(
                   curInput.asInstanceOf[Tensor[Float]],
@@ -245,13 +246,15 @@ class SpatialMaxPoolingWithIndices[T: ClassTag](
           }
       }
     }
+    output = T( out, indices )
     output
   }
 
-  override def updateGradInput(input: Tensor[T], gradOutput: Tensor[T]): Tensor[T] = {
+  override def updateGradInput(input: Tensor[T], gradOutputTable: Table): Tensor[T] = {
 
     val (dimh, dimw, dimc) = format.getHWCDims(input.dim())
 
+    val gradOutput : Tensor[T] = gradOutputTable[Tensor[T]](1)
     val oHeight: Int = gradOutput.size(dimh)
     val oWidth: Int = gradOutput.size(dimw)
     gradInput.resizeAs(input)
