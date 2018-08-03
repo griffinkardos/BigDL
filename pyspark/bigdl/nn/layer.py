@@ -713,7 +713,7 @@ class Model(Container):
     All inputs should be able to connect to outputs through some paths in the graph.
     It is allowed that some successors of the inputs node are not connect to outputs.
     If so, these nodes will be excluded in the computation.
-    
+
     We also support initializing a Graph directly from a tensorflow module. In this case, you should
     pass your tensorflow nodes as inputs and outputs and also specify the byte_order parameter ("little_endian"
      or "big_endian") and node_type parameter ("bigdl" or "tensorflow")
@@ -885,8 +885,8 @@ class Model(Container):
         Return the corresponding node has the given name. If the given name doesn't match any node,
         an exception will be thrown
         :param name: node name
-        :param bigdl_type: 
-        :return: 
+        :param bigdl_type:
+        :return:
         """
         jnode = callBigDlFunc(bigdl_type, "findGraphNode", self.value, name)
         return Node.of(jnode)
@@ -1497,16 +1497,16 @@ class SpatialMaxPooling(Layer):
     oheight = op((height + 2*padH - kH) / dH + 1)
     op is a rounding operator. By default, it is floor.
     It can be changed by calling :ceil() or :floor() methods.
-    
+
     When padW and padH are both -1, we use a padding algorithm similar to the "SAME"
     padding of tensorflow. That is
- 
+
      outHeight = Math.ceil(inHeight.toFloat/strideH.toFloat)
      outWidth = Math.ceil(inWidth.toFloat/strideW.toFloat)
- 
+
      padAlongHeight = Math.max(0, (outHeight - 1) * strideH + kernelH - inHeight)
      padAlongWidth = Math.max(0, (outWidth - 1) * strideW + kernelW - inWidth)
- 
+
      padTop = padAlongHeight / 2
      padLeft = padAlongWidth / 2
 
@@ -1544,6 +1544,63 @@ class SpatialMaxPooling(Layer):
                                                 format)
 
 
+class SpatialMaxPoolingWithIndices(Layer):
+
+    '''
+    Applies 2D max-pooling operation in kWxkH regions by step size dWxdH steps.
+    The number of output features is equal to the number of input planes.
+    If the input image is a 3D tensor nInputPlane x height x width,
+    the output image size will be nOutputPlane x oheight x owidth where
+    owidth  = op((width  + 2*padW - kW) / dW + 1)
+    oheight = op((height + 2*padH - kH) / dH + 1)
+    op is a rounding operator. By default, it is floor.
+    It can be changed by calling :ceil() or :floor() methods.
+
+    When padW and padH are both -1, we use a padding algorithm similar to the "SAME"
+    padding of tensorflow. That is
+
+     outHeight = Math.ceil(inHeight.toFloat/strideH.toFloat)
+     outWidth = Math.ceil(inWidth.toFloat/strideW.toFloat)
+
+     padAlongHeight = Math.max(0, (outHeight - 1) * strideH + kernelH - inHeight)
+     padAlongWidth = Math.max(0, (outWidth - 1) * strideW + kernelW - inWidth)
+
+     padTop = padAlongHeight / 2
+     padLeft = padAlongWidth / 2
+
+    :param kW:              kernel width
+    :param kH:              kernel height
+    :param dW:              step size in width
+    :param dH:              step size in height
+    :param padW:            padding in width
+    :param padH:            padding in height
+    :param format:          "NCHW" or "NHWC", indicating the input data format
+
+    >>> spatialMaxPooling = SpatialMaxPoolingWithIndices(2, 2, 2, 2)
+    creating: createSpatialMaxPoolingWithIndices
+    >>> spatialMaxPooling = SpatialMaxPoolingWithIndices(2, 2, 2, 2, -1, -1, True, "NHWC")
+    creating: createSpatialMaxPoolingWithIndices
+    '''
+    # to_ceil: call floor() when False; call ceil() when True
+
+    def __init__(self, kw,
+                 kh,
+                 dw,
+                 dh,
+                 pad_w=0,
+                 pad_h=0,
+                 to_ceil=False,
+                 format="NCHW",
+                 bigdl_type="float"):
+        super(SpatialMaxPoolingWithIndices, self).__init__(None, bigdl_type, kw,
+                                                kh,
+                                                dw,
+                                                dh,
+                                                pad_w,
+                                                pad_h,
+                                                to_ceil,
+                                                format)
+
 class Select(Layer):
 
     '''
@@ -1577,7 +1634,7 @@ class Recurrent(Container):
     def get_hidden_state(self):
         """
         get hidden state and cell at last time step.
-        
+
         :return: list of hidden state and cell
         """
         states = callBigDlFunc(self.bigdl_type, "getHiddenState", self.value)
@@ -1768,7 +1825,7 @@ class TimeDistributed(Layer):
 
     For instance, The TimeDistributed Layer can feed each time slice of input tensor
     to the Linear layer.
-    
+
     The input data format is [Batch, Time, Other dims]. For the contained layer, it must not change
     the Other dims length.
 
@@ -1817,16 +1874,16 @@ class SpatialAveragePooling(Layer):
     '''
     Applies 2D average-pooling operation in kWxkH regions by step size dWxdH steps.
     The number of output features is equal to the number of input planes.
-    
+
     When padW and padH are both -1, we use a padding algorithm similar to the "SAME"
     padding of tensorflow. That is
- 
+
      outHeight = Math.ceil(inHeight.toFloat/strideH.toFloat)
      outWidth = Math.ceil(inWidth.toFloat/strideW.toFloat)
- 
+
      padAlongHeight = Math.max(0, (outHeight - 1) * strideH + kernelH - inHeight)
      padAlongWidth = Math.max(0, (outWidth - 1) * strideW + kernelW - inWidth)
- 
+
      padTop = padAlongHeight / 2
      padLeft = padAlongWidth / 2
 
@@ -1898,7 +1955,7 @@ class SpatialBatchNormalization(Layer):
 
     where gamma and beta are learnable parameters.
     The learning of gamma and beta is optional.
-    
+
     :param n_output: output feature map number
     :param eps: avoid divide zero
     :param momentum: momentum for weight update
@@ -3041,7 +3098,7 @@ class NegativeEntropyPenalty(Layer):
     Penalize the input multinomial distribution if it has low entropy.
     The input to this layer should be a batch of vector each representing a
     multinomial distribution. The input is typically the output of a softmax layer.
-    
+
     For forward, the output is the same as input and a NegativeEntropy loss of
     the latent state will be calculated each time. For backward,
     gradInput = gradOutput + gradLoss
@@ -3049,10 +3106,10 @@ class NegativeEntropyPenalty(Layer):
     This can be used in reinforcement learning to discourage the policy from
     collapsing to a single action for a given state, which improves exploration.
     See the A3C paper for more detail (https://arxiv.org/pdf/1602.01783.pdf).
-    
+
     >>> ne = NegativeEntropyPenalty(0.01)
     creating: createNegativeEntropyPenalty
-    
+
     :param beta penalty coefficient
     '''
 
@@ -3315,7 +3372,7 @@ class Mean(Layer):
 
     :param dimension: the dimension to be applied mean operation
     :param n_input_dims: specify the number of dimensions that this module will receiveIf it is more than the dimension of input tensors, the first dimension would be consideredas batch size
-    :param squeeze: default is true, which will squeeze the sum dimension; set it to false to keep the sum dimension 
+    :param squeeze: default is true, which will squeeze the sum dimension; set it to false to keep the sum dimension
 
     >>> mean = Mean(1, 1, True)
     creating: createMean
@@ -4113,7 +4170,7 @@ class SpatialDilatedConvolution(Layer):
                                                         dilation_h,
                                                         wRegularizer,
                                                         bRegularizer)
-                                                        
+
     def set_init_method(self, weight_init_method = None, bias_init_method = None):
         callBigDlFunc(self.bigdl_type, "setInitMethod", self.value,
                       weight_init_method, bias_init_method)
@@ -4903,16 +4960,16 @@ class SpatialConvolutionMap(Layer):
     This class is a generalization of SpatialConvolution.
     It uses a generic connection table between input and output features.
     The SpatialConvolution is equivalent to using a full connection table.
-    
+
     When padW and padH are both -1, we use a padding algorithm similar to the "SAME"
     padding of tensorflow. That is
- 
+
      outHeight = Math.ceil(inHeight.toFloat/strideH.toFloat)
      outWidth = Math.ceil(inWidth.toFloat/strideW.toFloat)
- 
+
      padAlongHeight = Math.max(0, (outHeight - 1) * strideH + kernelH - inHeight)
      padAlongWidth = Math.max(0, (outWidth - 1) * strideW + kernelW - inWidth)
- 
+
      padTop = padAlongHeight / 2
      padLeft = padAlongWidth / 2
 
@@ -5059,7 +5116,7 @@ class SpatialWithinChannelLRN(Layer):
 class Pack(Layer):
     '''
     Stacks a list of n-dimensional tensors into one (n+1)-dimensional tensor.
-    
+
     >>> layer = Pack(1)
     creating: createPack
     '''
@@ -5069,7 +5126,7 @@ class Pack(Layer):
 
 class ConvLSTMPeephole(Layer):
     '''
-    
+
 |   Convolution Long Short Term Memory architecture with peephole.
 |   Ref. A.: https://arxiv.org/abs/1506.04214 (blueprint for this module)
 |   B. https://github.com/viorik/ConvLSTM
@@ -5224,11 +5281,11 @@ class Masking(Layer):
                                          mask_value)
 
 class Maxout(Layer):
-    
+
     '''
     A linear maxout layer Maxout layer select the element-wise maximum value of
     maxoutNumber Linear(inputSize, outputSize) layers
-    ```    
+    ```
     :param input_size: the size the each input sample
     :param output_size: the size of the module output of each sample
     :param maxout_number: number of Linear layers to use
@@ -5239,10 +5296,10 @@ class Maxout(Layer):
            applied to the bias.
     :param init_weight: initial weight
     :param init_bias: initial bias
-    
+
     >>> maxout = Maxout(2, 5, 3)
     creating: createMaxout
-    '''    
+    '''
     def __init__(self,
                  input_size,
                  output_size,
@@ -5260,7 +5317,7 @@ class Maxout(Layer):
 class HardSigmoid(Layer):
     """
     Apply Hard-sigmoid function
-```   
+```
                |  0, if x < -2.5
         f(x) = |  1, if x > 2.5
                |  0.2 * x + 0.5, otherwise

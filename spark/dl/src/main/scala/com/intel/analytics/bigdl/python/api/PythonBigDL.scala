@@ -465,6 +465,26 @@ class PythonBigDL[T: ClassTag](implicit ev: TensorNumeric[T]) extends Serializab
     else maxpooling
   }
 
+  def createSpatialMaxPoolingWithIndices(kW: Int,
+    kH: Int,
+    dW: Int,
+    dH: Int,
+    padW: Int = 0,
+    padH: Int = 0,
+    ceilMode: Boolean = false,
+    format: String = "NCHW")
+  : SpatialMaxPoolingWithIndices[T] = {
+    val maxpooling = SpatialMaxPoolingWithIndices[T](kW,
+      kH,
+      dW,
+      dH,
+      padW,
+      padH,
+      format = DataFormat(format))
+    if (ceilMode) maxpooling.ceil()
+    else maxpooling
+  }
+
   def createLocallyConnected2D(
     nInputPlane: Int,
     inputWidth: Int,

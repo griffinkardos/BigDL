@@ -46,7 +46,7 @@ and run sdist.
 
 def build_from_source():
     code_path = bigdl_home + "/pyspark/bigdl/util/common.py"
-    print("Checking: %s to see if build from source" % code_path)
+    print(("Checking: %s to see if build from source" % code_path))
     if os.path.exists(code_path):
         return True
     return False
@@ -55,7 +55,7 @@ def build_from_source():
 def init_env():
     if build_from_source():
         print("Start to build distributed package")
-        print("HOME OF BIGDL: " + bigdl_home)
+        print(("HOME OF BIGDL: " + bigdl_home))
         dist_source = bigdl_home + "/dist"
         if not os.path.exists(dist_source):
             print(building_error_msg)
@@ -74,9 +74,9 @@ def get_bigdl_packages():
         package = dirpath.split(bigdl_python_home)[1].replace('/', '.')
         if "__pycache__" not in package:
             bigdl_packages.append(package)
-    print "=========================bigdl packages========================="
-    print "\n".join(bigdl_packages)
-    print "================================================================"
+    print("=========================bigdl packages=========================")
+    print("\n".join(bigdl_packages))
+    print("================================================================")
     return bigdl_packages
 
 def setup_package():
