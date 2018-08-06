@@ -485,6 +485,24 @@ class PythonBigDL[T: ClassTag](implicit ev: TensorNumeric[T]) extends Serializab
     else maxpooling
   }
 
+  def createSpatialUnpooling(kW: Int,
+    kH: Int,
+    dW: Int,
+    dH: Int,
+    padW: Int = 0,
+    padH: Int = 0,
+    format: String = "NCHW")
+  : SpatialUnpooling[T] = {
+    val unpooling = SpatialUnpooling[T](kW,
+      kH,
+      dW,
+      dH,
+      padW,
+      padH,
+      format = DataFormat(format))
+    unpooling
+  }
+
   def createLocallyConnected2D(
     nInputPlane: Int,
     inputWidth: Int,

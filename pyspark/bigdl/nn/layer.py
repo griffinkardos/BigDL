@@ -1601,6 +1601,38 @@ class SpatialMaxPoolingWithIndices(Layer):
                                                 to_ceil,
                                                 format)
 
+class SpatialUnpooling(Layer):
+    #TODO Better documentation
+
+    '''
+    Applies the partial inverse of the 2D max pooling operation.
+
+    :param kW:              kernel width
+    :param kH:              kernel height
+    :param dW:              step size in width
+    :param dH:              step size in height
+    :param padW:            padding in width
+    :param padH:            padding in height
+    :param format:          "NCHW" or "NHWC", indicating the input data format
+    '''
+    # to_ceil: call floor() when False; call ceil() when True
+
+    def __init__(self, kw,
+                 kh,
+                 dw,
+                 dh,
+                 pad_w=0,
+                 pad_h=0,
+                 format="NCHW",
+                 bigdl_type="float"):
+        super(SpatialUnpooling, self).__init__(None, bigdl_type, kw,
+                                                kh,
+                                                dw,
+                                                dh,
+                                                pad_w,
+                                                pad_h,
+                                                format)
+
 class Select(Layer):
 
     '''
